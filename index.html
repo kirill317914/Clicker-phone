@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Телефон Магнат 2</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Manrope:wght@400;600;800&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: шапка с кассой, слева витрина с телефоном (тап = продажа), справа вкладки «Улучшения» и «Коллекция». Вид: лист спецификации, тонкие линии, квадратные углы. Одна тема, задана намеренно. */
+:root {
+  --paper: #E7EBE5;
+  --card: #F5F7F1;
+  --ink: #13201A;
+  --muted: #55645A;
+  --line: #C3CCC1;
+  --grid: rgba(19, 32, 26, .07);
+  --accent: #2B4BFF;
+  --accent-ink: #FFFFFF;
+  --gain: #0B7A52;
+  --flash: #FFC83D;
+  --f-display: 'Unbounded', 'Arial Black', system-ui, sans-serif;
+  --f-body: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --f-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 15px;
+  line-height: 1.45;
+  padding-block: 16px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  -webkit-tap-highlight-color: transparent;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+
+.app { max-width: 980px; margin: 0 auto; display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 800px) {
+  .app { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); align-items: start; }
+  .top { grid-column: 1 / -1; }
+}
+
+.top { display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: space-between; align-items: flex-end; }
+.brand { min-width: 0; }
+h1 { margin: 0; font-family: var(--f-display); font-weight: 800; font-size: clamp(24px, 6vw, 36px); letter-spacing: -.03em; line-height: 1.05; text-wrap: balance; }
+.sub { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+.wallet { text-align: right; min-width: 0; }
+.label { display: block; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+#money { display: block; font-family: var(--f-mono); font-weight: 700; font-size: clamp(26px, 7vw, 38px); font-variant-numeric: tabular-nums; line-height: 1.1; overflow-wrap: anywhere; }
+#pps { color: var(--gain); font-size: 13px; font-weight: 500; }
+
+.stage {
+  position: relative; overflow: hidden;
+  background-color: var(--card);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  border: 1.5px solid var(--ink); box-shadow: 5px 5px 0 var(--ink); border-radius: 4px;
+  padding: 14px 14px 16px; display: grid; gap: 10px;
+  user-select: none; -webkit-user-select: none; touch-action: manipulation;
+}
+.stage-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.year { font-family: var(--f-mono); font-weight: 700; font-size: 30px; line-height: 1; }
+.counter { font-family: var(--f-mono); font-size: 13px; color: var(--muted); text-align: right; }
+.counter b { color: var(--ink); font-size: 16px; }
+.phone-wrap { position: relative; display: grid; place-items: center; padding: 6px 0 14px; }
+.phone-wrap::after { content: ""; position: absolute; bottom: 6px; left: 50%; width: 46%; height: 12px; transform: translateX(-50%); background: radial-gradient(closest-side, rgba(19, 32, 26, .28), transparent); }
+.phone-btn { position: relative; z-index: 1; background: none; border: 0; padding: 4px; border-radius: 24px; }
+.phone-btn svg { display: block; height: min(44vh, 340px); width: auto; max-width: 100%; pointer-events: none; transition: transform .08s ease-out; }
+.phone-btn:active svg { transform: scale(.955) rotate(-.6deg); }
+.meta { text-align: center; }
+.chip { display: inline-block; font-family: var(--f-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; border: 1px solid var(--ink); border-radius: 2px; padding: 2px 7px; margin-bottom: 6px; }
+.meta h2 { margin: 0; font-family: var(--f-display); font-weight: 600; font-size: clamp(17px, 4.4vw, 22px); letter-spacing: -.02em; text-wrap: balance; }
+.price { margin: 4px 0 0; font-family: var(--f-mono); font-size: 14px; color: var(--gain); font-weight: 700; }
+.hint { margin: 2px 0 0; font-size: 12px; color: var(--muted); }
+
+.next { border-top: 1.5px solid var(--ink); padding-top: 12px; display: grid; gap: 8px; }
+.next-row { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+.next-name { font-weight: 800; min-width: 0; overflow-wrap: anywhere; }
+.next-cost { font-family: var(--f-mono); font-size: 13px; color: var(--muted); }
+.bar { height: 8px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.bar > i { display: block; height: 100%; width: 0; background: var(--accent); }
+.unlock { background: var(--accent); color: var(--accent-ink); border: 1.5px solid var(--ink); border-radius: 4px; padding: 12px 14px; font-weight: 800; width: 100%; box-shadow: 3px 3px 0 var(--ink); transition: transform .06s, box-shadow .06s; overflow-wrap: anywhere; }
+.unlock:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+.unlock:disabled { background: transparent; color: var(--muted); border-color: var(--line); box-shadow: none; cursor: default; }
+.done { margin: 0; font-weight: 800; color: var(--gain); text-align: center; }
+
+.float-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.float { position: absolute; font-family: var(--f-mono); font-weight: 700; font-size: 18px; color: var(--gain); transform: translate(-50%, -50%); animation: rise .9s ease-out forwards; text-shadow: 0 0 3px var(--card), 0 0 3px var(--card); }
+@keyframes rise { from { opacity: 1; transform: translate(-50%, -50%); } to { opacity: 0; transform: translate(-50%, -190%); } }
+
+.bonus { position: absolute; z-index: 3; background: var(--flash); color: var(--ink); border: 1.5px solid var(--ink); border-radius: 4px; padding: 8px 10px; font-weight: 800; font-size: 13px; box-shadow: 3px 3px 0 var(--ink); animation: wobble 1s ease-in-out infinite alternate; }
+@keyframes wobble { from { transform: rotate(-3deg); } to { transform: rotate(3deg); } }
+
+.panel { background: var(--card); border: 1.5px solid var(--ink); border-radius: 4px; min-width: 0; }
+.tabs { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1.5px solid var(--ink); }
+.tabs button { background: transparent; border: 0; padding: 12px 8px; font-weight: 800; letter-spacing: .02em; }
+.tabs button + button { border-left: 1.5px solid var(--ink); }
+.tabs button[aria-selected="true"] { background: var(--ink); color: var(--paper); }
+.tabpane { padding: 4px 14px 14px; }
+.ups { list-style: none; margin: 0; padding: 0; }
+.up { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.up:last-child { border-bottom: 0; }
+.up-name { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; font-weight: 800; }
+.lvl { font-size: 12px; color: var(--muted); font-weight: 500; }
+.up-eff { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+.up-now { color: var(--ink); font-weight: 600; }
+.buy { background: var(--ink); color: var(--paper); border: 1.5px solid var(--ink); border-radius: 4px; padding: 9px 10px; min-width: 112px; font-family: var(--f-mono); font-weight: 700; font-size: 13px; }
+.buy:disabled { background: transparent; color: var(--muted); border-color: var(--line); cursor: default; }
+.buy:active:not(:disabled) { background: var(--accent); border-color: var(--accent); }
+
+.col-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 12px; padding: 12px 0 8px; font-weight: 800; }
+.col-sub { font-size: 12px; color: var(--muted); font-weight: 600; }
+.grid-wrap { max-height: min(70vh, 560px); overflow-y: auto; padding-right: 2px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+.cell { border: 1px solid var(--line); border-radius: 4px; padding: 8px 4px 6px; text-align: center; background: var(--paper); min-width: 0; }
+.cell svg { display: block; height: 78px; width: auto; margin: 0 auto 4px; }
+.cell .cn { font-size: 11px; font-weight: 800; line-height: 1.2; overflow-wrap: anywhere; }
+.cell .cy { font-family: var(--f-mono); font-size: 10px; color: var(--muted); }
+.cell.locked .cn { color: var(--muted); }
+.cell.now { border-color: var(--ink); border-width: 1.5px; background: var(--card); }
+
+.foot { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: center; color: var(--muted); font-size: 12px; }
+.reset { background: transparent; border: 1px solid var(--line); border-radius: 4px; padding: 6px 10px; color: var(--muted); font-size: 12px; }
+.reset.sure { border-color: var(--ink); color: var(--ink); font-weight: 800; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bonus { animation: none; }
+  .phone-btn svg { transition: none; }
+}
+
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}
+</style>
+</head>
+<body>
+
+<main class="app">
+  <header class="top">
+    <div class="brand">
+      <h1>Телефон Магнат 2</h1>
+      <p class="sub" id="sub">Продавай, улучшай магазин, собери все модели.</p>
+    </div>
+    <div class="wallet">
+      <span class="label">Касса</span>
+      <span id="money">0 ₽</span>
+      <span id="pps" class="mono">+0 ₽/сек</span>
+    </div>
+  </header>
+
+  <section class="stage" id="stage" aria-label="Витрина">
+    <div class="stage-head">
+      <div>
+        <span class="label">Год выпуска</span>
+        <div class="year" id="year">2000</div>
+      </div>
+      <div class="counter">Модель<br><b id="cnt">1</b> / <span id="cntAll">0</span></div>
+    </div>
+    <div class="phone-wrap">
+      <button class="phone-btn" id="tap" type="button" aria-label="Продать телефон"><span id="art"></span></button>
+    </div>
+    <div class="meta">
+      <span class="chip" id="chip">Nokia</span>
+      <h2 id="pname">Nokia 3310</h2>
+      <p class="price" id="pprice">Продажа: 5 ₽</p>
+      <p class="hint" id="hint">Тапай по телефону, чтобы продавать.</p>
+    </div>
+    <div class="next" id="nextBox">
+      <div id="nextInfo" class="next">
+        <div class="next-row">
+          <span class="next-name" id="nextName">Следующая модель</span>
+          <span class="next-cost" id="nextCost">0 / 0 ₽</span>
+        </div>
+        <div class="bar"><i id="bar"></i></div>
+        <button class="unlock" id="unlock" type="button">Открыть модель</button>
+      </div>
+      <p class="done" id="done" hidden>Все модели собраны. Ты магнат!</p>
+    </div>
+    <div class="float-layer" id="floats"></div>
+    <button class="bonus" id="bonus" type="button" hidden>Распродажа! Тап за бонус</button>
+  </section>
+
+  <section class="panel" aria-label="Магазин">
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" id="tab-up" aria-selected="true" aria-controls="pane-up">Улучшения</button>
+      <button type="button" role="tab" id="tab-col" aria-selected="false" aria-controls="pane-col">Коллекция</button>
+    </div>
+    <div class="tabpane" id="pane-up" role="tabpanel" aria-labelledby="tab-up">
+      <ul class="ups" id="ups"></ul>
+    </div>
+    <div class="tabpane" id="pane-col" role="tabpanel" aria-labelledby="tab-col" hidden>
+      <div class="col-head"><span>Твоя коллекция <span class="mono" id="colCount"></span></span><span class="col-sub" id="colBrands"></span></div>
+      <div class="grid-wrap"><div class="grid" id="grid"></div></div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <span id="stats" class="mono"></span>
+    <button class="reset" id="reset" type="button">Начать заново</button>
+  </footer>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  /* Бренд | модель | год выхода | форма камеры (необязательно). Порядок внутри года важен. */
+  var RAW = [
+    'Nokia|3310|2000|k', 'Nokia|1100|2003|k', 'Motorola|RAZR V3|2004|k',
+    'Nokia|N95|2007|a', 'Apple|iPhone 2G|2007',
+    'Apple|iPhone 3G|2008',
+    'Apple|iPhone 3GS|2009',
+    'Apple|iPhone 4|2010', 'Samsung|Galaxy S|2010',
+    'Apple|iPhone 4S|2011', 'Samsung|Galaxy S II|2011', 'Samsung|Galaxy Note|2011', 'Xiaomi|Mi 1|2011',
+    'Apple|iPhone 5|2012', 'Samsung|Galaxy S III|2012', 'Nokia|Lumia 920|2012', 'Xiaomi|Mi 2|2012',
+    'Apple|iPhone 5s|2013', 'Samsung|Galaxy S4|2013', 'Samsung|Galaxy Note 3|2013', 'Sony|Xperia Z|2013', 'Xiaomi|Mi 3|2013', 'Motorola|Moto X|2013', 'Oppo|Find 5|2013',
+    'Apple|iPhone 6|2014', 'Samsung|Galaxy S5|2014', 'Sony|Xperia Z3|2014', 'Xiaomi|Mi 4|2014', 'OnePlus|One|2014', 'Vivo|X5Max|2014', 'Huawei|Mate 7|2014', 'Nubia|Z7|2014',
+    'Apple|iPhone 6s|2015', 'Samsung|Galaxy S6 Edge|2015',
+    'Apple|iPhone SE|2016|b', 'Apple|iPhone 7|2016', 'Samsung|Galaxy S7|2016', 'Xiaomi|Mi 5|2016', 'Redmi|Note 4|2016', 'Sony|Xperia X|2016', 'OnePlus|3|2016', 'Google|Pixel|2016', 'Huawei|P9|2016', 'Oppo|R9s|2016',
+    'Apple|iPhone 8|2017|b', 'Apple|iPhone X|2017', 'Samsung|Galaxy S8|2017', 'Samsung|Galaxy Note 8|2017', 'Xiaomi|Mi 6|2017', 'Sony|Xperia XZ Premium|2017', 'Vivo|X20|2017', 'Nubia|Z17|2017', 'Huawei|Mate 10 Pro|2017', 'Google|Pixel 2 XL|2017', 'Honor|9|2017',
+    'Apple|iPhone XS|2018', 'Samsung|Galaxy S9|2018', 'Samsung|Galaxy Note 9|2018', 'Xiaomi|Mi 8|2018', 'Redmi|Note 5|2018', 'RedMagic|1|2018', 'Vivo|NEX|2018', 'Oppo|Find X|2018', 'OnePlus|6|2018', 'Huawei|P20 Pro|2018', 'Honor|View 20|2018', 'Google|Pixel 3|2018', 'Asus|ROG Phone|2018', 'Realme|1|2018',
+    'Apple|iPhone 11|2019', 'Samsung|Galaxy S10|2019', 'Samsung|Galaxy Fold|2019', 'Samsung|Galaxy Note10|2019', 'Xiaomi|Mi 9|2019', 'Redmi|K20|2019', 'Redmi|Note 8|2019', 'Sony|Xperia 1|2019', 'RedMagic|3|2019', 'Vivo|NEX 3|2019', 'Oppo|Reno 10x Zoom|2019', 'OnePlus|7 Pro|2019', 'Huawei|Mate 30 Pro|2019', 'Google|Pixel 4|2019', 'Realme|X2 Pro|2019', 'Motorola|RAZR 2019|2019',
+    'Apple|iPhone 12|2020', 'Samsung|Galaxy S20 Ultra|2020', 'Samsung|Galaxy Z Flip|2020', 'Samsung|Galaxy Note20|2020', 'Xiaomi|Mi 10|2020', 'Xiaomi|Mi 11|2020', 'Redmi|Note 9|2020', 'Sony|Xperia 1 II|2020', 'RedMagic|5G|2020', 'Vivo|X50 Pro|2020', 'Oppo|Find X2 Pro|2020', 'OnePlus|8 Pro|2020', 'Huawei|Mate 40 Pro|2020', 'Google|Pixel 5|2020', 'Asus|ROG Phone 3|2020', 'Infinix|Zero 8|2020', 'Tecno|Camon 16|2020',
+    'Apple|iPhone 13|2021', 'Samsung|Galaxy S21 Ultra|2021', 'Samsung|Galaxy Z Fold3|2021', 'Xiaomi|Mi MIX Fold|2021', 'Xiaomi|12|2021', 'Redmi|K40|2021', 'Redmi|Note 11|2021', 'Sony|Xperia 1 III|2021', 'RedMagic|6|2021', 'Vivo|X70 Pro|2021', 'Oppo|Find X3 Pro|2021', 'Oppo|Find N|2021', 'OnePlus|9 Pro|2021', 'Huawei|P50 Pro|2021', 'Huawei|Mate X2|2021', 'Google|Pixel 6 Pro|2021', 'Realme|GT|2021', 'Asus|ROG Phone 5|2021', 'Infinix|Note 10 Pro|2021', 'Tecno|Phantom X|2021',
+    'Apple|iPhone 14|2022', 'Samsung|Galaxy S22 Ultra|2022', 'Xiaomi|13|2022', 'Redmi|Note 12|2022', 'Sony|Xperia 1 IV|2022', 'RedMagic|7|2022', 'RedMagic|8 Pro|2022', 'Vivo|X80 Pro|2022', 'Vivo|X90 Pro|2022', 'Vivo|X Fold|2022', 'Oppo|Find X5 Pro|2022', 'Oppo|Find N2 Flip|2022', 'OnePlus|10 Pro|2022', 'Honor|Magic V|2022', 'Huawei|Mate 50 Pro|2022', 'Google|Pixel 7 Pro|2022', 'Nothing|Phone (1)|2022', 'Realme|GT 2 Pro|2022', 'Asus|ROG Phone 6|2022', 'Infinix|Zero Ultra|2022', 'Tecno|Phantom X2|2022',
+    'Apple|iPhone 15|2023', 'Samsung|Galaxy S23 Ultra|2023', 'Samsung|Galaxy Z Flip5|2023', 'Xiaomi|14|2023', 'Redmi|K70|2023', 'Redmi|Note 13|2023', 'Sony|Xperia 1 V|2023', 'RedMagic|9 Pro|2023', 'Nubia|Z60 Ultra|2023', 'Vivo|X100 Pro|2023', 'iQOO|12|2023', 'Oppo|Find X6 Pro|2023', 'Oppo|Find N3|2023', 'OnePlus|11|2023', 'OnePlus|Open|2023', 'Honor|Magic5 Pro|2023', 'Huawei|Mate 60 Pro|2023', 'Google|Pixel 8 Pro|2023', 'Nothing|Phone (2)|2023', 'Realme|GT 5 Pro|2023', 'Motorola|razr 40 ultra|2023', 'Asus|ROG Phone 7 Ultimate|2023', 'Tecno|Phantom V Fold|2023', 'Tecno|Camon 20 Pro|2023', 'Infinix|Zero 30|2023',
+    'Apple|iPhone 16|2024', 'Samsung|Galaxy S24 Ultra|2024', 'Samsung|Galaxy Z Fold6|2024', 'Xiaomi|15|2024', 'Redmi|Note 14|2024', 'Redmi|K80|2024', 'Sony|Xperia 1 VI|2024', 'RedMagic|10 Pro|2024', 'Nubia|Z70 Ultra|2024', 'Vivo|X200 Pro|2024', 'iQOO|13|2024', 'Oppo|Find X7 Ultra|2024', 'Oppo|Find X8 Pro|2024', 'OnePlus|13|2024', 'Honor|Magic6 Pro|2024', 'Honor|Magic7 Pro|2024', 'Honor|Magic V3|2024', 'Huawei|Pura 70 Ultra|2024', 'Huawei|Mate XT|2024', 'Huawei|Mate 70 Pro|2024', 'Google|Pixel 9 Pro|2024', 'Nothing|Phone (2a)|2024', 'Realme|GT 6|2024', 'Realme|GT 7 Pro|2024', 'Motorola|razr 50 ultra|2024', 'Asus|ROG Phone 9 Pro|2024', 'Infinix|Zero Flip|2024', 'Infinix|GT 20 Pro|2024', 'Tecno|Phantom V Fold2|2024', 'Tecno|Camon 30 Premier|2024',
+    'Apple|iPhone 16e|2025|a', 'Apple|iPhone 17|2025', 'Apple|iPhone Air|2025|a', 'Samsung|Galaxy S25 Ultra|2025', 'Samsung|Galaxy Z Fold7|2025', 'Xiaomi|17|2025', 'Redmi|Turbo 4|2025', 'Redmi|Note 15|2025', 'Sony|Xperia 1 VII|2025', 'RedMagic|11 Pro|2025', 'Nubia|Z80 Ultra|2025', 'Vivo|V50|2025', 'Vivo|X300 Pro|2025', 'iQOO|15|2025', 'Oppo|Find N5|2025', 'Oppo|Find X9 Pro|2025', 'OnePlus|15|2025', 'Honor|Magic V5|2025', 'Honor|Magic8 Pro|2025', 'Huawei|Pura 80 Pro|2025', 'Google|Pixel 10 Pro|2025', 'Nothing|Phone (3)|2025', 'Realme|GT 7|2025', 'Realme|GT 8 Pro|2025', 'Motorola|razr 60 ultra|2025', 'Infinix|GT 30 Pro|2025', 'Tecno|Camon 40 Premier|2025',
+    'Samsung|Galaxy S26 Ultra|2026'
+  ];
+
+  /* Цвета корпусов по брендам (пара: от светлого к тёмному краю градиента) */
+  var GEN = [['#EDEFF2', '#BFC6D0'], ['#1A1D22', '#3D4350'], ['#2F5E9E', '#8FB5E4'], ['#E7C9B5', '#C48E6E'], ['#6E8F7A', '#3C5A49'], ['#D9CFEA', '#A397C9']];
+  var PAL = {
+    Apple: [['#E8EAED', '#C4C8CF'], ['#3A3D42', '#17191C'], ['#E8D9BC', '#C6B28A'], ['#BFD3EA', '#7FA2CC'], ['#F4C6CF', '#D99AA8'], ['#C9E3CF', '#8FB59A'], ['#F4F4F2', '#D4D4CE']],
+    Samsung: [['#2B3040', '#10131C'], ['#D9D4EA', '#A79BCB'], ['#CFE3D2', '#8FB59A'], ['#E8E3D6', '#BDB49C'], ['#2C4B6B', '#142437'], ['#C9CDD2', '#8C93A0']],
+    Xiaomi: [['#F2F2F0', '#D2D2CD'], ['#2A3A4E', '#121A26'], ['#6E8F7A', '#3C5A49'], ['#F2B24C', '#D9632B'], ['#8FA8C9', '#4E6A93'], ['#2E3A68', '#8A4FA3']],
+    Redmi: [['#2A3A4E', '#121A26'], ['#E9E4D9', '#BEB8A9'], ['#4D8C8A', '#244847'], ['#D9CFEA', '#A397C9'], ['#1A1D22', '#3D4350']],
+    RedMagic: [['#121214', '#3A0F18'], ['#1B1B1F', '#C21E3A'], ['#0B0F1A', '#5B2A86'], ['#E8E8EA', '#A7A9B0']],
+    Nubia: [['#EDEDED', '#C4C4C4'], ['#1C1C1E', '#4A4A52'], ['#2F2A3A', '#8A6FB5']],
+    Vivo: [['#2F5E9E', '#8FB5E4'], ['#EDEFF2', '#BFC6D0'], ['#1A1B22', '#3B2C5C'], ['#F2C9B3', '#E08E6E']],
+    iQOO: [['#F4F4F2', '#C9CAC2'], ['#14161A', '#2B3A66'], ['#E8E8EA', '#5C6BC0']],
+    Oppo: [['#E5E1F0', '#A9A0CC'], ['#1F2A24', '#5E7C6A'], ['#F5E9DA', '#D5B58C'], ['#232A3C', '#5F6FA0']],
+    Tecno: [['#2E5E8E', '#9FC6E8'], ['#1D1F24', '#5B5F6B'], ['#E8F0E8', '#AEC9B1'], ['#F0A24A', '#D8602C']],
+    Infinix: [['#244E4A', '#7FC1B3'], ['#1A1D26', '#56608A'], ['#ECECEC', '#BEBEC4'], ['#E85D3A', '#8A2F1E']],
+    Sony: [['#17181B', '#34363C'], ['#C9CDD2', '#8C93A0'], ['#6F7A6B', '#3F4B3E'], ['#D8C7C0', '#A98F86']],
+    OnePlus: [['#1E1E20', '#4A4A50'], ['#2A6B58', '#0F3B30'], ['#D8D3C5', '#A39B86'], ['#B52B2B', '#681313']],
+    Huawei: [['#F4F1EA', '#D5CFC0'], ['#1C2230', '#47536E'], ['#8B2E3A', '#4A1520'], ['#2D5F4C', '#12301F']],
+    Honor: [['#E9ECF2', '#B5BDD0'], ['#1B1E26', '#3C4458'], ['#C7A66B', '#8A6E3A']],
+    Google: [['#EDEDE8', '#C9C9BF'], ['#2C2F33', '#121416'], ['#A8C7A0', '#6C8F64'], ['#C9D8EE', '#8FA9D2']],
+    Nothing: [['#F2F2F2', '#D0D0D0'], ['#1C1C1C', '#3A3A3A']],
+    Realme: [['#F4D24D', '#E0A91E'], ['#1B1E24', '#3A4150'], ['#E8E8EA', '#B5B8C2'], ['#5C7FD6', '#2D3F8C']],
+    Motorola: [['#1D2B4A', '#0B1426'], ['#E8564A', '#A8281E'], ['#E9E4D9', '#BEB8A9'], ['#101010', '#303030']],
+    Asus: [['#141416', '#3A3A44'], ['#E8E8EA', '#9A9CA6'], ['#101018', '#5A1FA8']],
+    Nokia: [['#2E4A8F', '#1B2D5E'], ['#3C4A3E', '#1E2A20'], ['#D9D9D6', '#A5A6A3']]
+  };
+
+  function hash(s) { var h = 0; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h; }
+  function styleFor(b, y) {
+    switch (b) {
+      case 'Apple':   return y < 2010 ? 'a' : y <= 2016 ? 'b' : y <= 2018 ? 'c' : y < 2023 ? 'd' : 'e';
+      case 'Samsung': return y < 2019 ? 'b' : y < 2022 ? 'x4' : 'sv';
+      case 'Xiaomi': case 'Redmi': return y < 2016 ? 'x1' : y < 2018 ? 'x2' : y < 2020 ? 'x3' : y < 2023 ? 'x4' : 'x5';
+      case 'RedMagic': return y < 2021 ? 'x3' : 'x4';
+      case 'Nubia':   return y < 2018 ? 'x1' : y < 2023 ? 'x2' : 'x5';
+      case 'Vivo': case 'iQOO': return y < 2017 ? 'b' : y < 2020 ? 'x2' : y < 2023 ? 'x4' : 'x5';
+      case 'Oppo':    return y < 2018 ? 'b' : y < 2019 ? 'x2' : y < 2023 ? 'x4' : 'x5';
+      case 'Tecno': case 'Infinix': return y < 2020 ? 'b' : y < 2023 ? 'd' : 'x4';
+      case 'Sony':    return y < 2019 ? 'b' : 'sv';
+      case 'OnePlus': return y < 2018 ? 'x2' : y < 2023 ? 'x3' : 'x5';
+      case 'Huawei': case 'Honor': return y < 2017 ? 'x1' : y < 2023 ? 'x4' : 'x5';
+      case 'Google':  return y < 2018 ? 'x1' : y < 2021 ? 'd' : 'bar';
+      case 'Realme':  return y < 2019 ? 'b' : y < 2022 ? 'x4' : 'x5';
+      case 'Motorola': return y < 2019 ? 'a' : 'x2';
+      case 'Asus':    return 'x3';
+      case 'Nothing': return 'x2';
+    }
+    return 'b';
+  }
+
+  var M = RAW.map(function (line, k) {
+    var p = line.split('|'), b = p[0], model = p[1], y = +p[2];
+    var name = b === 'Apple' ? model : b + ' ' + model;
+    var pal = PAL[b] || GEN;
+    return { n: name, b: b, y: y, k: k, s: p[3] || styleFor(b, y), c: pal[hash(name) % pal.length], art: b === 'Apple' ? 'iPhone' : b };
+  });
+  M.sort(function (a, b) { return a.y - b.y || a.k - b.k; });
+  var N = M.length;
+  var BRANDS = {};
+  M.forEach(function (m) { BRANDS[m.b] = 1; });
+  var NB = Object.keys(BRANDS).length;
+
+  /* ---------- Рисунок телефона (вид сзади) ---------- */
+  var gid = 0;
+  function lum(h) {
+    var n = parseInt(h.slice(1), 16);
+    return (0.299 * (n >> 16 & 255) + 0.587 * (n >> 8 & 255) + 0.114 * (n & 255)) / 255;
+  }
+  function lens(cx, cy, r) {
+    return '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="#0C1118" stroke="#3A4552" stroke-width="1.5"/>' +
+      '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 0.6).toFixed(1) + '" fill="#1F3A5A"/>' +
+      '<circle cx="' + (cx - r * 0.22).toFixed(1) + '" cy="' + (cy - r * 0.25).toFixed(1) + '" r="' + (r * 0.18).toFixed(1) + '" fill="#fff" opacity=".55"/>';
+  }
+  function flash(cx, cy, r) {
+    return '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="#F6E9B4" stroke="rgba(0,0,0,.25)" stroke-width="1"/>';
+  }
+  var GLASS = 'fill="rgba(10,14,20,.34)" stroke="rgba(255,255,255,.3)" stroke-width="2"';
+  function camera(s) {
+    switch (s) {
+      case 'k':  return '<rect x="60" y="300" width="80" height="3" rx="1.5" fill="#000" opacity=".22"/><rect x="60" y="310" width="80" height="3" rx="1.5" fill="#000" opacity=".22"/>';
+      case 'a':  return lens(54, 42, 9);
+      case 'b':  return lens(54, 44, 10) + flash(80, 42, 4.5);
+      case 'c':  return '<rect x="36" y="26" width="34" height="86" rx="17" fill="#0C1118"/>' + lens(53, 48, 11) + flash(53, 70, 4) + lens(53, 92, 11);
+      case 'd':  return '<rect x="32" y="26" width="76" height="76" rx="20" ' + GLASS + '/>' + lens(56, 50, 13) + lens(84, 78, 13) + flash(88, 44, 4);
+      case 'e':  return '<rect x="32" y="26" width="82" height="82" rx="22" ' + GLASS + '/>' + lens(56, 50, 12) + lens(56, 84, 12) + lens(90, 67, 12) + flash(92, 40, 4);
+      case 'sv': return lens(48, 48, 12) + lens(48, 84, 12) + lens(48, 120, 12) + flash(76, 52, 4);
+      case 'bar': return '<rect x="22" y="62" width="156" height="50" fill="#0C1118" opacity=".88"/>' + lens(56, 87, 14) + lens(98, 87, 14) + flash(136, 87, 5);
+      case 'x1': return lens(100, 44, 11) + flash(100, 70, 4.5);
+      case 'x2': return '<rect x="38" y="26" width="92" height="34" rx="17" fill="#0C1118" opacity=".9"/>' + lens(58, 43, 10) + lens(88, 43, 10) + flash(114, 43, 4);
+      case 'x3': return '<rect x="36" y="24" width="38" height="104" rx="19" fill="#0C1118" opacity=".9"/>' + lens(55, 48, 10) + lens(55, 76, 10) + lens(55, 104, 10) + flash(88, 40, 4);
+      case 'x4': return '<rect x="30" y="22" width="100" height="112" rx="18" fill="#0C1118" opacity=".9"/>' + lens(62, 56, 16) + lens(62, 100, 16) + lens(104, 70, 12) + flash(106, 106, 5);
+      case 'x5': return '<circle cx="84" cy="80" r="52" fill="#0C1118" opacity=".92" stroke="rgba(255,255,255,.28)" stroke-width="3"/>' + lens(66, 64, 15) + lens(102, 64, 15) + lens(84, 102, 15);
+    }
+    return '';
+  }
+  function phoneSVG(m) {
+    var id = 'p' + (gid++);
+    var txt = lum(m.c[0]) < 0.5 ? '#FFFFFF' : '#1B1F24';
+    return '<svg viewBox="0 0 200 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + m.n + '">' +
+      '<defs><linearGradient id="g' + id + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + m.c[0] + '"/><stop offset="1" stop-color="' + m.c[1] + '"/></linearGradient>' +
+      '<clipPath id="c' + id + '"><rect x="22" y="10" width="156" height="380" rx="28"/></clipPath></defs>' +
+      '<g clip-path="url(#c' + id + ')"><rect x="22" y="10" width="156" height="380" fill="url(#g' + id + ')"/>' +
+      '<path d="M105 10 H178 V250 Z" fill="#fff" opacity=".13"/>' + camera(m.s) + '</g>' +
+      '<rect x="22" y="10" width="156" height="380" rx="28" fill="none" stroke="rgba(19,32,26,.55)" stroke-width="2.5"/>' +
+      '<text x="100" y="352" text-anchor="middle" font-family="Manrope,Arial,sans-serif" font-size="14" font-weight="700" letter-spacing="1.5" fill="' + txt + '" opacity=".8">' + m.art + '</text>' +
+      '</svg>';
+  }
+  var LOCKED = '<svg viewBox="0 0 200 400" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="22" y="10" width="156" height="380" rx="28" fill="#D5DBD3" stroke="#B5BEB3" stroke-width="2.5"/><circle cx="100" cy="200" r="0" fill="none"/><text x="100" y="212" text-anchor="middle" font-family="Manrope,Arial,sans-serif" font-size="56" font-weight="800" fill="#B0B9AE">?</text></svg>';
+
+  /* ---------- Числа ---------- */
+  var SUF = ['', ' тыс.', ' млн', ' млрд', ' трлн', ' квдр.', ' квнт.'];
+  function fmt(n) {
+    if (n < 1000) return Math.floor(n).toLocaleString('ru-RU');
+    var i = 0;
+    while (n >= 1000 && i < SUF.length - 1) { n /= 1000; i++; }
+    var s = n < 10 ? n.toFixed(2) : n < 100 ? n.toFixed(1) : n.toFixed(0);
+    return s.replace('.', ',') + SUF[i];
+  }
+  function fmtRate(n) {
+    if (n === 0) return '0';
+    if (n < 10) return n.toFixed(1).replace('.', ',');
+    return fmt(n);
+  }
+
+  /* ---------- Состояние ---------- */
+  var KEY = 'phoneMagnate2.v1';
+  var fresh = function () { return { money: 0, total: 0, idx: 0, sellers: 0, vit: 0, ad: 0, opt: 0, taps: 0 }; };
+  var S = fresh();
+
+  function load(data) {
+    var src = data;
+    if (!src) {
+      try { var raw = localStorage.getItem(KEY); if (raw) src = JSON.parse(raw); } catch (e) {}
+    }
+    if (src && typeof src.money === 'number') {
+      var f = fresh();
+      for (var k in f) if (typeof src[k] === 'number' && isFinite(src[k])) f[k] = src[k];
+      f.idx = Math.max(0, Math.min(N - 1, Math.floor(f.idx)));
+      S = f;
+    }
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+
+  /* ---------- Формулы ---------- */
+  var G = Math.pow(200000, 1 / (N - 1)); // цена продажи растёт от 5 ₽ до примерно 1 млн ₽
+  function val(i) { return Math.max(5, Math.round(5 * Math.pow(G, i))); }
+  function adMult() { return 1 + 0.1 * S.ad; }
+  function disc() { return Math.min(0.6, 0.03 * S.opt); }
+  function tapGain() { return val(S.idx) * (1 + 0.25 * S.vit) * adMult(); }
+  function pps() { return S.sellers * 0.3 * val(S.idx) * adMult(); }
+  function unlockCost() { return Math.round(val(S.idx + 1) * (30 + 0.2 * S.idx) * (1 - disc())); }
+
+  var UPG = [
+    { id: 'sellers', name: 'Продавец', base: 12, g: 1.16, key: 'sellers',
+      eff: function () { return 'Каждый продаёт сам: +0,3 продажи в секунду.'; },
+      now: function () { return 'Сейчас: ' + fmtRate(pps()) + ' ₽/сек'; } },
+    { id: 'vit', name: 'Витрина', base: 10, g: 1.22, key: 'vit',
+      eff: function () { return 'Каждый уровень: +25% к цене тапа.'; },
+      now: function () { return 'Сейчас: ' + fmt(tapGain()) + ' ₽ за тап'; } },
+    { id: 'ad', name: 'Реклама в Телеграме', base: 60, g: 1.5, key: 'ad',
+      eff: function () { return 'Каждый уровень: +10% ко всему доходу.'; },
+      now: function () { return 'Сейчас: ×' + adMult().toFixed(1).replace('.', ','); } },
+    { id: 'opt', name: 'Оптовые закупки', base: 100, g: 1.7, key: 'opt', max: 20,
+      eff: function () { return 'Каждый уровень: новые модели дешевле на 3% (до 60%).'; },
+      now: function () { return 'Сейчас: скидка ' + Math.round(disc() * 100) + '%'; } }
+  ];
+  function upCost(u) { return Math.ceil(u.base * val(S.idx) * Math.pow(u.g, S[u.key])); }
+
+  /* ---------- DOM ---------- */
+  var $ = function (id) { return document.getElementById(id); };
+  var el = {
+    money: $('money'), pps: $('pps'), year: $('year'), cnt: $('cnt'), cntAll: $('cntAll'),
+    art: $('art'), tap: $('tap'), pname: $('pname'), chip: $('chip'), pprice: $('pprice'), hint: $('hint'),
+    nextInfo: $('nextInfo'), done: $('done'), nextName: $('nextName'), nextCost: $('nextCost'), bar: $('bar'), unlock: $('unlock'),
+    floats: $('floats'), stage: $('stage'), bonus: $('bonus'), ups: $('ups'), grid: $('grid'),
+    colCount: $('colCount'), colBrands: $('colBrands'), stats: $('stats'), reset: $('reset')
+  };
+  el.cntAll.textContent = N;
+  $('sub').textContent = 'От ' + M[0].n + ' до ' + M[N - 1].n + '. ' + N + ' моделей, ' + NB + ' брендов.';
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  UPG.forEach(function (u) {
+    var li = document.createElement('li');
+    li.className = 'up';
+    li.innerHTML =
+      '<div><div class="up-name"><span>' + u.name + '</span><span class="lvl mono" id="lv-' + u.id + '"></span></div>' +
+      '<p class="up-eff">' + u.eff() + ' <span class="up-now" id="nw-' + u.id + '"></span></p></div>' +
+      '<button class="buy" type="button" id="by-' + u.id + '"></button>';
+    el.ups.appendChild(li);
+    li.querySelector('button').addEventListener('click', function () { buy(u); });
+  });
+
+  function buildGrid() {
+    var h = '', seen = {}, nb = 0;
+    for (var i = 0; i < N; i++) {
+      var open = i <= S.idx;
+      if (open && !seen[M[i].b]) { seen[M[i].b] = 1; nb++; }
+      h += '<div class="cell' + (open ? '' : ' locked') + (i === S.idx ? ' now' : '') + '">' +
+        (open ? phoneSVG(M[i]) : LOCKED) +
+        '<div class="cn">' + (open ? M[i].n : '???') + '</div><div class="cy">' + M[i].y + '</div></div>';
+    }
+    el.grid.innerHTML = h;
+    el.colCount.textContent = (S.idx + 1) + ' / ' + N;
+    el.colBrands.textContent = 'Брендов: ' + nb + ' из ' + NB;
+  }
+
+  function showPhone() {
+    var m = M[S.idx];
+    el.art.innerHTML = phoneSVG(m);
+    el.year.textContent = m.y;
+    el.cnt.textContent = S.idx + 1;
+    el.pname.textContent = m.n;
+    el.chip.textContent = m.b;
+    buildGrid();
+  }
+
+  /* ---------- Действия ---------- */
+  function floatText(x, y, txt) {
+    if (reduce) return;
+    var r = el.stage.getBoundingClientRect();
+    var s = document.createElement('span');
+    s.className = 'float';
+    s.textContent = '+' + txt;
+    s.style.left = (x - r.left) + 'px';
+    s.style.top = (y - r.top) + 'px';
+    if (el.floats.children.length > 14) el.floats.removeChild(el.floats.firstChild);
+    el.floats.appendChild(s);
+    setTimeout(function () { if (s.parentNode) s.parentNode.removeChild(s); }, 900);
+  }
+
+  function sell(x, y) {
+    var g = tapGain();
+    S.money += g; S.total += g; S.taps++;
+    floatText(x, y, fmt(g));
+    if (S.taps === 5) el.hint.textContent = 'Копи на следующую модель: она продаётся дороже.';
+  }
+  el.tap.addEventListener('pointerdown', function (e) {
+    e.preventDefault();
+    sell(e.clientX, e.clientY);
+    render();
+  });
+  el.tap.addEventListener('click', function (e) {
+    if (e.detail === 0) {
+      var r = el.tap.getBoundingClientRect();
+      sell(r.left + r.width / 2, r.top + r.height / 3);
+      render();
+    }
+  });
+
+  function buy(u) {
+    if (u.max && S[u.key] >= u.max) return;
+    var c = upCost(u);
+    if (S.money < c) return;
+    S.money -= c; S[u.key]++;
+    save(); render();
+  }
+
+  el.unlock.addEventListener('click', function () {
+    if (S.idx >= N - 1) return;
+    var c = unlockCost();
+    if (S.money < c) return;
+    S.money -= c; S.idx++;
+    showPhone(); save(); render();
+  });
+
+  var bonusTimer = null;
+  function scheduleBonus(ms) { clearTimeout(bonusTimer); bonusTimer = setTimeout(showBonus, ms); }
+  function showBonus() {
+    el.bonus.style.left = (6 + Math.random() * 52) + '%';
+    el.bonus.style.top = (18 + Math.random() * 40) + '%';
+    el.bonus.hidden = false;
+    clearTimeout(bonusTimer);
+    bonusTimer = setTimeout(function () { el.bonus.hidden = true; scheduleBonus(45000 + Math.random() * 45000); }, 12000);
+  }
+  el.bonus.addEventListener('click', function () {
+    var g = tapGain() * 40;
+    S.money += g; S.total += g;
+    var r = el.bonus.getBoundingClientRect();
+    floatText(r.left + r.width / 2, r.top, fmt(g));
+    el.bonus.hidden = true;
+    scheduleBonus(45000 + Math.random() * 45000);
+    render();
+  });
+
+  var tabUp = $('tab-up'), tabCol = $('tab-col'), paneUp = $('pane-up'), paneCol = $('pane-col');
+  function setTab(col) {
+    tabUp.setAttribute('aria-selected', String(!col));
+    tabCol.setAttribute('aria-selected', String(col));
+    paneUp.hidden = col; paneCol.hidden = !col;
+  }
+  tabUp.addEventListener('click', function () { setTab(false); });
+  tabCol.addEventListener('click', function () { setTab(true); });
+
+  var resetTimer = null;
+  el.reset.addEventListener('click', function () {
+    if (!el.reset.classList.contains('sure')) {
+      el.reset.classList.add('sure');
+      el.reset.textContent = 'Точно сбросить всё?';
+      resetTimer = setTimeout(function () { el.reset.classList.remove('sure'); el.reset.textContent = 'Начать заново'; }, 4000);
+      return;
+    }
+    clearTimeout(resetTimer);
+    el.reset.classList.remove('sure'); el.reset.textContent = 'Начать заново';
+    S = fresh(); showPhone(); save(); render();
+  });
+
+  /* ---------- Отрисовка ---------- */
+  function render() {
+    el.money.textContent = fmt(S.money) + ' ₽';
+    el.pps.textContent = '+' + fmtRate(pps()) + ' ₽/сек';
+    el.pprice.textContent = 'Продажа: ' + fmt(tapGain()) + ' ₽';
+
+    var last = S.idx >= N - 1;
+    el.nextInfo.hidden = last;
+    el.done.hidden = !last;
+    if (!last) {
+      var c = unlockCost(), nx = M[S.idx + 1];
+      el.nextName.textContent = 'Следующая: ' + nx.n + ' (' + nx.y + ')';
+      el.nextCost.textContent = fmt(Math.min(S.money, c)) + ' / ' + fmt(c) + ' ₽';
+      el.bar.style.width = Math.min(100, S.money / c * 100) + '%';
+      el.unlock.textContent = 'Открыть ' + nx.n + ' · ' + fmt(c) + ' ₽';
+      el.unlock.disabled = S.money < c;
+    }
+
+    UPG.forEach(function (u) {
+      var lv = S[u.key], maxed = u.max && lv >= u.max, c = upCost(u);
+      $('lv-' + u.id).textContent = 'ур. ' + lv + (u.max ? ' / ' + u.max : '');
+      $('nw-' + u.id).textContent = u.now();
+      var b = $('by-' + u.id);
+      b.textContent = maxed ? 'Максимум' : fmt(c) + ' ₽';
+      b.disabled = maxed || S.money < c;
+    });
+
+    el.stats.textContent = 'Заработано всего: ' + fmt(S.total) + ' ₽ · Тапов: ' + S.taps.toLocaleString('ru-RU');
+  }
+
+  /* ---------- Старт ---------- */
+  var lastT = performance.now();
+  function loop() {
+    var now = performance.now(), dt = Math.min(1, (now - lastT) / 1000);
+    lastT = now;
+    var g = pps() * dt;
+    if (g > 0) { S.money += g; S.total += g; }
+    render();
+  }
+  function start(data) {
+    load(data);
+    showPhone();
+    render();
+    setInterval(loop, 100);
+    setInterval(save, 5000);
+    scheduleBonus(25000);
+    window.addEventListener('pagehide', save);
+  }
+
+  var hot = window.claude && window.claude.hot;
+  try { if (hot && hot.snapshot) hot.snapshot(function () { return S; }); } catch (e) {}
+  if (hot && hot.ready) hot.ready(function (d) { start(d); });
+  else start(hot && hot.data ? hot.data : null);
+})();
+</script>
+
+</body>
+</html>
